@@ -4,7 +4,8 @@ import torchvision
 class DataLoader:
     def __init__(self, neuralNetwork, device):
         self.device = device
-
+        self.BATCH_SIZE = 2048
+        self.NUM_WORKERS = 6
         self.PrepareDataset(neuralNetwork)
         self.LoadDataset(neuralNetwork)
 
@@ -19,9 +20,9 @@ class DataLoader:
         )
 
     def LoadDataset(self, neuralNetwork):
-        neuralNetwork.train_loader = torch.utils.data.DataLoader(neuralNetwork.train_dataset, batch_size=128, shuffle=True)
-        neuralNetwork.val_loader = torch.utils.data.DataLoader(neuralNetwork.val_dataset, batch_size=128, shuffle=False)
-        neuralNetwork.test_loader = torch.utils.data.DataLoader(neuralNetwork.test_data, batch_size = 128, shuffle = False, num_workers = 2)
+        neuralNetwork.train_loader = torch.utils.data.DataLoader(neuralNetwork.train_dataset, batch_size = self.BATCH_SIZE, shuffle=True, num_workers = self.NUM_WORKERS, pin_memory = True, persistent_workers = True)
+        neuralNetwork.val_loader = torch.utils.data.DataLoader(neuralNetwork.val_dataset, batch_size = self.BATCH_SIZE, shuffle=False, num_workers = self.NUM_WORKERS, pin_memory = True, persistent_workers = True)
+        neuralNetwork.test_loader = torch.utils.data.DataLoader(neuralNetwork.test_data, batch_size = self.BATCH_SIZE, shuffle = False, num_workers = self.NUM_WORKERS, pin_memory = True, persistent_workers = True)
 
         neuralNetwork.image, neuralNetwork.label = neuralNetwork.train_data[0]
         neuralNetwork.image.size()

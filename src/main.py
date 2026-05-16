@@ -12,11 +12,11 @@ def printMenu():
     print("5) Custom test")
 
 def main():
+    torch.backends.cudnn.benchmark = True
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     neuralNetwork = NeuralNetwork().to(device)
     dataLoader = DataLoader(neuralNetwork, device)
     action = Action(neuralNetwork, device)
-
 
 
     while(True):
@@ -28,7 +28,7 @@ def main():
         if(choice == 1):
             os.system("cls")
             # Train()
-            action.Train(75)
+            action.Train()
         
         elif(choice == 2):
             os.system("cls")
