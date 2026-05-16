@@ -8,8 +8,8 @@ __pycache__/
 *$py.class
 
 # data
-data/
-data
+data/*.*
+data/cifar-10-batches-py
 .vscode/
 .vscode
 

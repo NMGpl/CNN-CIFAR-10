@@ -1,6 +1,10 @@
 from PIL import Image
+from glob import glob
 import torch
+import torch.nn.functional as F
 import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+import matplotlib.image as img
 
 class Action:
     def __init__(self, neuralNetwork, device):
@@ -90,20 +94,49 @@ class Action:
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert("RGB")
         image = transform(image)
         image = image.unsqueeze(0)
         return image
 
     def CustomTest(self):
         print("Custom test")
-        image_paths = ["1.jpg", "2.jpg"]
+        image_paths = self.GetImgsPath()
         images = [self.LoadCustomImage(img) for img in image_paths]
 
         self.neuralNetwork.eval()
+        predictions, confidences = self.Predict(images)
+        
+        for i in range(len(image_paths)):
+            image = img.imread(image_paths[i])
+            plt.imshow(image)
+            print(f"Prediction: {self.neuralNetwork.class_names[predictions[i].item()]}")
+
+            plt.axis("off")
+            plt.title(f"Prediction: {self.neuralNetwork.class_names[predictions[i].item()]}, {round(confidences[i].item() * 100, 2)}%")
+            plt.pause(1.5)
+        
+        plt.show()
+    
+    def GetImgsPath(self):
+        path = glob("data/custom/*")
+        return path
+
+    def Predict(self, images):
+        predictions = []
+        confidences = []
+
         with torch.no_grad():
             for image in images:
                 image = image.to(self.device)
                 output = self.neuralNetwork(image)
+
+                probabilities = F.softmax(output, dim = 1)
+
+                confidence = torch.max(probabilities, 1).values
                 _, predicted = torch.max(output, 1)
-                print(f"Prediction: {self.neuralNetwork.class_names[predicted.item()]}")
+
+                confidences.append(confidence)
+                predictions.append(predicted)
+
+        return predictions, confidences
