@@ -13,15 +13,19 @@ class Action:
 
     def Train(self):
         print("Training network")
-        best_acc = 0
+        bestValAcc = 0
+        trainAcc = 0
+        total = 0
+        correct = 0
         trainLosses = []
+        trainAccuracies = []
         valLosses = []
         valAccuracies = []
     
         self.neuralNetwork.train()
 
         for epoch in range(self.neuralNetwork.tMax):
-            print(f"Training epoch {epoch}...")
+            print(f"======================Training epoch {epoch}======================")
             running_loss = 0.0
 
             for i, data in enumerate(self.neuralNetwork.train_loader):
@@ -30,38 +34,62 @@ class Action:
 
                 self.neuralNetwork.optimizer.zero_grad()
                 outputs = self.neuralNetwork(inputs)
+                _, predicted = torch.max(outputs, 1)
+
                 loss = self.neuralNetwork.loss_function(outputs, labels)
                 loss.backward()
                 self.neuralNetwork.optimizer.step()
+
                 running_loss += loss.item()
-            
-            print(f"Loss: {running_loss / len(self.neuralNetwork.train_loader):.4f}")
+
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                
+            trainAcc = 100 * correct / total
+            trainAccuracies.append(trainAcc)
+
+            print(f"    Train Loss:             {running_loss / len(self.neuralNetwork.train_loader):.4f}")
+            print(f"    Train Accuracy:         {trainAcc:.2f}%")
 
             trainLosses.append(running_loss / len(self.neuralNetwork.train_loader))
-            val_acc, valLoss = self.Validate()
-            valAccuracies.append(val_acc)
+            valAcc, valLoss = self.Validate()
+            valAccuracies.append(valAcc)
             valLosses.append(valLoss)
             self.neuralNetwork.train()
 
-            if val_acc > best_acc:
-                best_acc = val_acc
+            if valAcc > bestValAcc:
+                bestValAcc = valAcc
                 torch.save(self.neuralNetwork.state_dict(), "model/best_model.pth")
-                print("Saved best model")
+                print("    Saved best model")
 
             self.neuralNetwork.scheduler.step()
 
         torch.save(self.neuralNetwork.state_dict(), "model/trained_net.pth")
-        print("Network trained and saved")
-        self.ShowPlot(trainLosses, "Epoch", "Loss", "Training Loss", True)
-        self.ShowPlot(valLosses, "Epoch", "Loss", "Validation Loss", True)
-        self.ShowPlot(valAccuracies, "Epoch", "Accuracy", "Validation Accuracy", True)
+        print("    Network trained and saved")
+        self.ShowPlot(trainLosses, valLosses, trainAccuracies, valAccuracies, True)
+        # self.ShowPlot(valLosses, "Epoch", "Loss", "Validation Loss", True)
+        # self.ShowPlot(valAccuracies, "Epoch", "Accuracy", "Validation Accuracy", True)
 
-    def ShowPlot(self, data, xlabel, ylabel, title, save):
-        name = f"{title}, lr - {self.neuralNetwork.learningRate}, momentum - {self.neuralNetwork.momentum}, decay - {self.neuralNetwork.decay}, scheduler - True"
-        plt.plot(data)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.title(name)
+    def ShowPlot(self, data1, data2, data3, data4, save):
+        name = f"Loss-Accuracy, lr - {self.neuralNetwork.learningRate}, momentum - {self.neuralNetwork.momentum}, decay - {self.neuralNetwork.decay}, scheduler - True"
+        plt.figure(figsize = (10, 4))
+        plt.subplot(1, 2, 1)#{
+        plt.plot(data1, label = "Train Loss")
+        plt.plot(data2, label = "Validation Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Loss Graph")
+        plt.legend()
+        #}
+        plt.subplot(1, 2, 2)#{
+        plt.plot(data3, label = "Train Accuracy")
+        plt.plot(data4, label = "Validation Accuracy")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.title("Accuracy Graph")
+        plt.legend()
+        #}
+
         if(save):
             plt.savefig(f"figure/{name}.png", dpi=300, bbox_inches="tight")
         plt.show()
@@ -89,8 +117,8 @@ class Action:
         accuracy = 100 * correct / total
         avgLoss = running_loss / len(self.neuralNetwork.val_loader)
 
-        print(f"Validation Loss: {avgLoss:.4f}")
-        print(f"Accuracy: {accuracy}%")
+        print(f"    Validation Loss:        {avgLoss:.4f}")
+        print(f"    Validation Accuracy:    {accuracy:.2f}%")
 
         return accuracy, avgLoss
 
