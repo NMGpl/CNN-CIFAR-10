@@ -52,7 +52,7 @@ class NeuralNetwork(nn.Module):
         self.trainTransform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.ColorJitter(brightness = 0.2, contrast = 0.2, saturation = 0.2),
-            # transforms.RandomGrayscale(),
+            transforms.RandomGrayscale(0.1),
             transforms.RandomCrop(32, padding=4),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
