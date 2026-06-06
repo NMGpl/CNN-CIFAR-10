@@ -15,7 +15,7 @@ def main():
     torch.backends.cudnn.benchmark = True
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     neuralNetwork = NeuralNetwork().to(device)
-    dataLoader = DataLoader(neuralNetwork, device)
+    dataLoader = DataLoader(neuralNetwork)
     action = Action(neuralNetwork, device)
 
 

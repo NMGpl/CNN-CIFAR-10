@@ -1,13 +1,29 @@
 import torch
 import torchvision
+import torchvision.transforms as transforms
 
 class DataLoader:
-    def __init__(self, neuralNetwork, device):
-        self.device = device
+    def __init__(self, neuralNetwork):
         self.BATCH_SIZE = 256
         self.NUM_WORKERS = 6
+
+        self.PrepareTransforms(neuralNetwork)
         self.PrepareDataset(neuralNetwork)
         self.LoadDataset(neuralNetwork)
+
+    def PrepareTransforms(self, neuralNetwork):
+        neuralNetwork.trainTransform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(brightness = 0.2, contrast = 0.2, saturation = 0.2),
+            transforms.RandomGrayscale(0.1),
+            transforms.RandomCrop(32, padding = 4),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))
+        ])
+        neuralNetwork.testTransform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))
+        ])
 
     def PrepareDataset(self, neuralNetwork):
         neuralNetwork.train_data = torchvision.datasets.CIFAR10(root = "./data", train = True, transform = neuralNetwork.trainTransform, download = True)
@@ -26,4 +42,4 @@ class DataLoader:
 
         neuralNetwork.image, neuralNetwork.label = neuralNetwork.train_data[0]
         neuralNetwork.image.size()
-        neuralNetwork.class_names = ["plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+        neuralNetwork.class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]

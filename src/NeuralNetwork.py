@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision.transforms as transforms
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -10,7 +9,7 @@ class NeuralNetwork(nn.Module):
         self.learningRate = 0.001
         self.momentum = 0.9
         self.decay = 1.2e-6
-        self.tMax = 30
+        self.tMax = 10
         self.learningRateMin = 0.000001
 
         # self.InitLayers()
@@ -18,7 +17,6 @@ class NeuralNetwork(nn.Module):
         self.features = self.initFeatures()
         self.classifier = self.initClassifier()
 
-        self.PrepareTransforms()
 
         self.loss_function = nn.CrossEntropyLoss()
         # self.optimizer = optim.SGD(self.parameters(), lr = self.learningRate, momentum = self.momentum, weight_decay = self.decay)
@@ -45,30 +43,4 @@ class NeuralNetwork(nn.Module):
         x = self.features(x)
         x = self.classifier(x)
         return x
-
-    def PrepareTransforms(self):
-        self.trainTransform = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.ColorJitter(
-                brightness = 0.2, 
-                contrast = 0.2, 
-                saturation = 0.2
-                ),
-            transforms.RandomGrayscale(0.1),
-            transforms.RandomCrop(
-                32, 
-                padding = 4
-                ),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                (0.4914, 0.4822, 0.4465),
-                (0.2470, 0.2435, 0.2616)
-            )
-        ])
-        self.testTransform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(
-                (0.4914, 0.4822, 0.4465),
-                (0.2470, 0.2435, 0.2616)
-            )
-        ])
+    
