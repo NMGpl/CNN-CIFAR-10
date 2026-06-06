@@ -16,8 +16,6 @@ class Action:
         print("Training network")
         bestValAcc = 0
         trainAcc = 0
-        total = 0
-        correct = 0
         trainLosses = []
         trainAccuracies = []
         valLosses = []
@@ -28,6 +26,8 @@ class Action:
         for epoch in range(self.neuralNetwork.tMax):
             print(f"======================Training epoch {epoch}======================")
             running_loss = 0.0
+            total = 0
+            correct = 0
 
             for i, data in enumerate(self.neuralNetwork.train_loader):
                 inputs, labels = data
@@ -75,6 +75,7 @@ class Action:
         name = f"Loss-Accuracy, lr - {self.neuralNetwork.learningRate}, momentum - {self.neuralNetwork.momentum}, decay - {self.neuralNetwork.decay}, scheduler - True"
         plt.figure(figsize = (10, 4))
         plt.subplot(1, 2, 1)#{
+        plt.grid(True)
         plt.plot(data1, label = "Train Loss")
         plt.plot(data2, label = "Validation Loss")
         plt.xlabel("Epoch")
@@ -83,6 +84,7 @@ class Action:
         plt.legend()
         #}
         plt.subplot(1, 2, 2)#{
+        plt.grid(True)
         plt.plot(data3, label = "Train Accuracy")
         plt.plot(data4, label = "Validation Accuracy")
         plt.xlabel("Epoch")
@@ -93,6 +95,63 @@ class Action:
 
         if(save):
             plt.savefig(f"figure/{name}.png", dpi=300, bbox_inches="tight")
+        plt.show()
+
+    def ShowConfusionMatrix(self, save):
+        self.neuralNetwork.eval()
+
+        numClasses = 10
+        confusionMatrix = torch.zeros(numClasses, numClasses, dtype=torch.int64)
+
+        with torch.no_grad():
+            for inputs, labels in self.neuralNetwork.test_loader:  # lub test_loader
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device)
+
+                outputs = self.neuralNetwork(inputs)
+                _, predicted = torch.max(outputs, 1)
+
+                for trueLabel, predictedLabel in zip(labels.view(-1), predicted.view(-1)):
+                    confusionMatrix[trueLabel.long(), predictedLabel.long()] += 1
+
+        confusionMatrix = confusionMatrix.cpu().numpy()
+
+        classNames = [
+            "airplane", "automobile", "bird", "cat", "deer",
+            "dog", "frog", "horse", "ship", "truck"
+        ]
+
+        plt.figure(figsize=(8, 6))
+        plt.imshow(confusionMatrix, interpolation="nearest")
+        plt.colorbar()
+
+        plt.xticks(range(numClasses), classNames, rotation=45)
+        plt.yticks(range(numClasses), classNames)
+
+        plt.xlabel("Predicted Class")
+        plt.ylabel("True Class")
+        plt.title("Confusion Matrix")
+
+        # wpisanie wartości do komórek
+        for i in range(numClasses):
+            for j in range(numClasses):
+                plt.text(
+                    j, i,
+                    str(confusionMatrix[i, j]),
+                    ha="center",
+                    va="center"
+                )
+
+        plt.tight_layout()
+
+        if save:
+            name = (
+                f"ConfusionMatrix, lr - {self.neuralNetwork.learningRate}, "
+                f"momentum - {self.neuralNetwork.momentum}, "
+                f"decay - {self.neuralNetwork.decay}"
+            )
+            plt.savefig(f"figure/{name}.png", dpi=300, bbox_inches="tight")
+
         plt.show()
 
     def Validate(self):
@@ -145,6 +204,7 @@ class Action:
 
         accuracy = 100 * correct / total
         print(f"Accuracy: {accuracy}%")
+        self.ShowConfusionMatrix(True)
     
     def LoadCustomImage(self, image_path):
         transform = transforms.Compose([

@@ -4,7 +4,7 @@ import torchvision
 class DataLoader:
     def __init__(self, neuralNetwork, device):
         self.device = device
-        self.BATCH_SIZE = 1024
+        self.BATCH_SIZE = 256
         self.NUM_WORKERS = 6
         self.PrepareDataset(neuralNetwork)
         self.LoadDataset(neuralNetwork)

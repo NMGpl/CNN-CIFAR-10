@@ -9,8 +9,8 @@ class NeuralNetwork(nn.Module):
         super().__init__()
         self.learningRate = 0.001
         self.momentum = 0.9
-        self.decay = 5e-4
-        self.tMax = 125
+        self.decay = 1.2e-6
+        self.tMax = 120
         self.learningRateMin = 0.000001
 
         self.InitLayers()
@@ -23,8 +23,13 @@ class NeuralNetwork(nn.Module):
         
     def InitLayers(self):
         self.conv1 = nn.Conv2d(3, 32, 3, padding = 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, padding = 1)
-        self.conv3 = nn.Conv2d(64, 128, 3, padding = 1)
+        self.conv2 = nn.Conv2d(32, 32, 3, padding = 1)
+        
+        self.conv3 = nn.Conv2d(32, 64, 3, padding = 1)
+        self.conv4 = nn.Conv2d(64, 64, 3, padding = 1)
+
+        self.conv5 = nn.Conv2d(64, 128, 3, padding = 1)
+        self.conv6 = nn.Conv2d(128, 128, 3, padding = 1)
 
         self.bn1 = nn.BatchNorm2d(32)
         self.bn2 = nn.BatchNorm2d(64)
@@ -37,9 +42,9 @@ class NeuralNetwork(nn.Module):
         self.fc2 = nn.Linear(256, 10)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.bn1(self.conv1(x))))
-        x = self.pool(F.relu(self.bn2(self.conv2(x))))
-        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        x = self.pool(F.relu(self.bn1(self.conv2(self.conv1(x)))))
+        x = self.pool(F.relu(self.bn2(self.conv4(self.conv3(x)))))
+        x = self.pool(F.relu(self.bn3(self.conv6(self.conv5(x)))))
 
         x = torch.flatten(x, 1)
         x = self.dropout(x)
@@ -55,9 +60,15 @@ class NeuralNetwork(nn.Module):
             transforms.RandomGrayscale(0.1),
             transforms.RandomCrop(32, padding=4),
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            transforms.Normalize(
+                (0.4914, 0.4822, 0.4465),
+                (0.2470, 0.2435, 0.2616)
+            )
         ])
         self.testTransform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            transforms.Normalize(
+                (0.4914, 0.4822, 0.4465),
+                (0.2470, 0.2435, 0.2616)
+            )
         ])
