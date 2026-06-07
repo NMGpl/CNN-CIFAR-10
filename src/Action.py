@@ -15,61 +15,56 @@ class Action:
     def Train(self):
         print("Training network")
         bestValAcc = 0
-        trainAcc = 0
-        trainLosses = []
-        trainAccuracies = []
-        valLosses = []
-        valAccuracies = []
-    
-        self.neuralNetwork.train()
+        trainLosses, trainAccuracies = [], []
+        valLosses, valAccuracies = [], []
 
         for epoch in range(self.neuralNetwork.tMax):
+            self.neuralNetwork.train()
             print(f"======================Training epoch {epoch}======================")
-            running_loss = 0.0
-            total = 0
-            correct = 0
+            runningLoss, correct, total = 0.0, 0, 0
 
-            for i, data in enumerate(self.neuralNetwork.train_loader):
-                inputs, labels = data
+            for inputs, labels in self.neuralNetwork.train_loader:
                 inputs, labels = inputs.to(self.device, non_blocking=True), labels.to(self.device, non_blocking=True)
 
                 self.neuralNetwork.optimizer.zero_grad()
                 outputs = self.neuralNetwork(inputs)
-                _, predicted = torch.max(outputs, 1)
-
+                
                 loss = self.neuralNetwork.loss_function(outputs, labels)
                 loss.backward()
+
                 self.neuralNetwork.optimizer.step()
 
-                running_loss += loss.item()
+                runningLoss += loss.item() * labels.size(0)
+                predicted = outputs.argmax(dim = 1)
 
-                total += labels.size(0)
                 correct += (predicted == labels).sum().item()
+                total += labels.size(0)
                 
             trainAcc = 100 * correct / total
             trainAccuracies.append(trainAcc)
+            epochLoss = runningLoss / total
 
-            print(f"    Train Loss:             {running_loss / len(self.neuralNetwork.train_loader):.4f}")
+            print(f"    Train Loss:             {epochLoss:.4f}")
             print(f"    Train Accuracy:         {trainAcc:.2f}%")
 
-            trainLosses.append(running_loss / len(self.neuralNetwork.train_loader))
+            trainLosses.append(epochLoss)
+
             valAcc, valLoss = self.Validate()
             valAccuracies.append(valAcc)
             valLosses.append(valLoss)
-            self.neuralNetwork.train()
 
             if valAcc > bestValAcc:
                 bestValAcc = valAcc
-                torch.save(self.neuralNetwork.state_dict(), "model/best_model.pth")
-                print("    Saved best model")
+                self.SaveModel("best_model.pth")
 
             self.neuralNetwork.scheduler.step()
 
-        torch.save(self.neuralNetwork.state_dict(), "model/trained_net.pth")
-        print("    Network trained and saved")
+        self.SaveModel("trained_net.pth")
         self.ShowPlot(trainLosses, valLosses, trainAccuracies, valAccuracies, True)
-        # self.ShowPlot(valLosses, "Epoch", "Loss", "Validation Loss", True)
-        # self.ShowPlot(valAccuracies, "Epoch", "Accuracy", "Validation Accuracy", True)
+
+    def SaveModel(self, name):
+        torch.save(self.neuralNetwork.state_dict(), f"model/{name}")
+        print("Model " + name + " saved")
 
     def ShowPlot(self, data1, data2, data3, data4, save):
         name = f"Loss-Accuracy, lr - {self.neuralNetwork.learningRate}, momentum - {self.neuralNetwork.momentum}, decay - {self.neuralNetwork.decay}, scheduler - True"

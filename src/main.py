@@ -13,8 +13,15 @@ def printMenu():
 
 def main():
     torch.backends.cudnn.benchmark = True
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("PyTorch version:", torch.__version__)
+    print("CUDA available:", torch.cuda.is_available())
+    if torch.cuda.is_available():
+        print("CUDA device name:", torch.cuda.get_device_name(0))
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
     neuralNetwork = NeuralNetwork().to(device)
+    
     dataLoader = DataLoader(neuralNetwork)
     action = Action(neuralNetwork, device)
 
