@@ -150,10 +150,7 @@ class Action:
         plt.show()
 
     def Validate(self):
-        correct = 0
-        total = 0
-        running_loss = 0
-
+        runningLoss, correct, total = 0.0, 0, 0
         self.neuralNetwork.eval()
 
         with torch.no_grad():
@@ -161,16 +158,16 @@ class Action:
                 images, labels = images.to(self.device, non_blocking=True), labels.to(self.device, non_blocking=True)
 
                 outputs = self.neuralNetwork(images)
-                _, predicted = torch.max(outputs, 1)
+                predicted = outputs.argmax(dim = 1)
 
                 loss = self.neuralNetwork.loss_function(outputs, labels)
-                running_loss += loss.item()
+                runningLoss += loss.item() * labels.size(0)
 
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
         accuracy = 100 * correct / total
-        avgLoss = running_loss / len(self.neuralNetwork.val_loader)
+        avgLoss = runningLoss / total
 
         print(f"    Validation Loss:        {avgLoss:.4f}")
         print(f"    Validation Accuracy:    {accuracy:.2f}%")

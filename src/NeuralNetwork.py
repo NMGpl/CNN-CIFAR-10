@@ -8,8 +8,8 @@ class NeuralNetwork(nn.Module):
         super().__init__()
         self.learningRate = 0.001
         self.momentum = 0.9
-        self.decay = 1.2e-6
-        self.tMax = 10
+        self.decay = 1e-4
+        self.tMax = 120
         self.learningRateMin = 0.000001
 
         # self.InitLayers()
@@ -33,9 +33,10 @@ class NeuralNetwork(nn.Module):
     def initClassifier(self):
         return nn.Sequential(
             nn.Flatten(),
-            nn.Dropout(0.25),
+            nn.Dropout(0.5),
             nn.Linear(128 * 4 * 4, 256), 
             nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(256, 10)
         )
     
